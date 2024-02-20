@@ -1,0 +1,68 @@
+<view class="index-container">
+  <!-- header start -->
+  <view class="index-header">
+    <van-search value="{{ searchValue }}" shape="round" placeholder="请输入搜索关键词" />
+  </view>
+  <!-- header end -->
+
+  <!-- body statr -->
+
+  <view class="index-body">
+    <!-- 左侧导航栏 -->
+    <view class="body-sidebar">
+      <van-sidebar active-key="{{ activeKey }}" bind:change="onsideBarChange">
+        <view wx:for="{{sidebarArray}}" wx:key="id">
+          <van-sidebar-item title="{{ item.title }}" />
+        </view>
+      </van-sidebar>
+    </view>
+    <!-- 右侧商品栏 -->
+    <view class="body-cell-group">
+      <view wx:for="{{ goodsArray }}" wx:key="id">
+        <van-card tag="{{ item.tag }}" desc="{{ item.desc }}" title="{{ item.title }}" thumb="{{ item.thumb }}">
+          <view slot="footer" wx:if="{{ !item.typeFlag }}">
+            <van-stepper value="{{ 0 }}" min="0" bind:change="onSetpperChange" data-id="{{item.id}}" />
+          </view>
+          <view slot="footer" wx:if="{{ item.typeFlag }}">
+            <van-button type="primary" size="mini" type="warning" round bind:click="popupShowClose" data-item="{{item}}">选规格</van-button>
+          </view>
+        </van-card>
+      </view>
+    </view>
+  </view>
+
+  <!-- body end -->
+  <!-- foot start -->
+  <view class="index-foot">
+    <van-submit-bar wx:if="{{orderTotalNum==0}}" label="商品种类数:" currency="" decimal-length="0" price="{{ orderTotalNum }}" disabled button-text="提交订单" bind:submit="onClickButton" tip="{{ true }}">
+      <van-image width="2rem" height="2rem" fit="contain" src="../../../../images/shoppingbag.png" />
+    </van-submit-bar>
+    <van-submit-bar wx:if="{{orderTotalNum!=0}}" label="商品种类数:" currency="" decimal-length="0" price="{{ orderTotalNum }}" button-text="提交订单" bind:submit="onClickButton" tip="{{ true }}">
+      <van-image width="2rem" height="2rem" fit="contain" src="../../../../images/shoppingbag_select.png" />
+    </van-submit-bar>
+  </view>
+
+  <!-- foot end -->
+
+  <!-- 规格选择弹出窗口 -->
+  <van-popup show="{{ popupShow }}" bind:close="popupOnClose">
+
+    <view class="type-select-view">
+      <view wx:for="{{ typeInfoSelect }}" wx:key="typeId">
+        <view class="complate-select">
+          <van-radio-group bind:change="onRadioChange" data-pid="{{ item.typeId }}">
+            <view class="typeName">
+              <van-tag plain type="primary" round size="medium">{{ item.typeName }}</van-tag>
+            </view>
+            <view class="radio-block">
+              <view class="radio" wx:for="{{ item.typeChildren }}" wx:key="typeId">
+                <van-radio name="{{ item.typeId }}" checked-color="red">{{ item.typeName }}</van-radio>
+              </view>
+            </view>
+          </van-radio-group>
+        </view>
+      </view>
+      <van-stepper value="{{ typeSetpperNum }}" min="0" bind:change="onSetpperChangeOfTypeSelect"/>
+    </view>
+  </van-popup>
+</view>

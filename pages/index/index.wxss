@@ -1,0 +1,59 @@
+.index-container{
+  overflow-y: hidden;
+  overflow-x: hidden;
+  position: fixed;
+  height: 100%;
+  flex-direction:column;
+}
+
+.index-body{
+  position: relative;
+  margin-bottom: 10px;
+}
+.body-sidebar{
+  float: left;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: fixed;
+  height: 80%;
+  width:20%;
+  display:flex;
+  flex-direction:column;
+}
+
+.body-cell-group{
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: fixed;
+  height: 80%;
+  width: 80%;
+  display:flex;
+  flex-direction:column;
+  margin-left: 20%;
+
+}
+
+.type-select-view{
+
+  flex-direction: row;
+  justify-content: center;
+  height: 300px;
+  width: 200px;
+  float: left;
+  border-width: 10rpx 10rpx 10rpx 10rpx;
+  border-color:white;
+  border-style: solid;
+}
+.complate-select{
+  float: left;
+}
+.radio-block{
+  width: 200px;
+  height: 70px;
+}
+
+.radio{
+  float: left;
+  margin: 10rpx 10rpx 10rpx 10rpx;
+}
+
