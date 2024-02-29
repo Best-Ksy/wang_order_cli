@@ -50,7 +50,7 @@
     <view class="type-select-view">
       <view wx:for="{{ typeInfoSelect }}" wx:key="typeId">
         <view class="complate-select">
-          <van-radio-group bind:change="onRadioChange" data-pid="{{ item.typeId }}">
+          <van-radio-group value="{{ item.selectChildId }}" bind:change="onRadioChange" data-pid="{{ item.typeId }}">
             <view class="typeName">
               <van-tag plain type="primary" round size="medium">{{ item.typeName }}</van-tag>
             </view>
@@ -62,7 +62,13 @@
           </van-radio-group>
         </view>
       </view>
-      <van-stepper value="{{ typeSetpperNum }}" min="0" bind:change="onSetpperChangeOfTypeSelect"/>
+      <view wx:if="{{ !typeSetpperDisableFlag }}">
+        <van-stepper value="{{ typeSetpperNum }}" disabled min="0" bind:change="onSetpperChangeOfTypeSelect"/>
+      </view>
+      <view wx:if="{{ typeSetpperDisableFlag }}">
+        <van-stepper value="{{ typeSetpperNum }}" min="0" bind:change="onSetpperChangeOfTypeSelect"/>
+      </view>
+      
     </view>
   </van-popup>
 </view>

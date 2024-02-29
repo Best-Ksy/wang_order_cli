@@ -202,10 +202,13 @@ Page({
     orderTotalNum: 0,
     //规格选择框中进步器数字
     typeSetpperNum: 0,
+    //规格选择框中进步器禁用状态
+    typeSetpperDisableFlag: false,
     //当前选择规格的商品
     typeOrder: {},
     //选择规格记录map
     typeSelectMap: ""
+
 
   },
   onLoad() {
@@ -301,19 +304,22 @@ Page({
     var good = even.currentTarget.dataset.item;
     this.setData({
       typeOrder: good,
-      typeSelectMap: new Map()
+      typeSelectMap: new Map(),
+      typeSetpperDisableFlag: false
     })
 
-    var tempTypeInfo = good.typeInfo
-    console.log(good)
 
+    var tempTypeInfo = good.typeInfo
     var tempOrderList = this.data.orderList;
     //查看该商品有无已经选择的规格
     // const gKey = goodsId + "_" + typeFlagTrue;
     var order = null;
+
+    var temTypeSelectMap = this.data.typeSelectMap;
+
     for (let i = 0; i < tempOrderList.length; i++) {
       //存在一个已经选择的就可以
-      if (tempOrderList[i].typeFlag) {
+      if (tempOrderList[i].typeFlag && good.id == tempOrderList[i].goodsId) {
         order = tempOrderList[i];
         break;
       }
@@ -325,56 +331,32 @@ Page({
         typeSetpperNum: 0
       })
     } else {
+      this.setData({
+        typeSetpperNum: order.num,
+        typeSetpperDisableFlag: true
+      })
       //获取规格参数
       var goodsTypeReletion = order.goodsTypeReletion;
-      // goodsTypeReletion: [{
-      //   typeId: "",
-      //   typeName: "",
-      //   typeChildrenId: "",
-      //   typeChildrenName: ""
-      // }]
 
-      /**
-       * [{
-          typeId: "1001",
-          typeName: "高温",
-          typeChildren: [{
-            typeId: "10010001",
-            typeName: "2*2",
-            typeChildren: []
-          }, {
-            typeId: "10010002",
-            typeName: "3*2",
-            typeChildren: []
-          }]
-        },
-       */
       for (let i = 0; i < goodsTypeReletion.length; i++) {
 
         var typeId = goodsTypeReletion[i].typeId;
         var typeChildrenId = goodsTypeReletion[i].typeChildrenId;
-
+        temTypeSelectMap.set(typeId, typeChildrenId);
         for (let j = 0; j < tempTypeInfo.length; j++) {
           //父规格id
           var typeInfoTypeId = tempTypeInfo[j].typeId;
-          var typeInfoTypeChildren = tempTypeInfo[j].typeChildren;
           if (typeId == typeInfoTypeId) {
-            for (let z = 0; z < typeInfoTypeChildren.length; z++) {
-              if (typeChildrenId == typeInfoTypeChildren[z].typeId) {
-                tempTypeInfo[j].selectType = z;
-              }
-            }
+            tempTypeInfo[j].selectChildId = typeChildrenId;
+
           }
         }
       }
     }
 
-    //设置规格选择选项
     this.setData({
-      typeInfoSelect: tempTypeInfo
-    })
-
-    this.setData({
+      typeInfoSelect: tempTypeInfo,
+      typeSelectMap: temTypeSelectMap,
       popupShow: true
     });
   },
@@ -390,28 +372,165 @@ Page({
   },
   //规格单选框选择触发
   onRadioChange(even) {
+
     //选中的id
     var selectId = even.detail;
     var pId = even.currentTarget.dataset.pid;
     var temTypeSelectMap = this.data.typeSelectMap;
+    //当前操作的商品
+    var tempTypeOrder = this.data.typeOrder;
     // var temTypeSelectMap = new Map();
-    console.log(temTypeSelectMap)    
+
     temTypeSelectMap.set(pId, selectId)
     this.setData({
       typeSelectMap: temTypeSelectMap
     })
-    console.log(this.data.typeSelectMap)
+    //判断规格是否选择完整
+    var allTypeInfo = tempTypeOrder.typeInfo;
+    var completeFlag = true;
+    for (let i = 0; i < allTypeInfo.length; i++) {
+      var type = temTypeSelectMap.get(allTypeInfo[i].typeId);
+      if (type == null) {
+        completeFlag = false;
+        break;
+      }
+    }
+    //check completet 放开进步器disable
+    if (completeFlag) {
+      var tempOrderList = this.data.orderList;
+      var arraySelect = Array.from(temTypeSelectMap);
+      //根据大类排序
+      arraySelect.sort(function (a, b) {
+        return a[0].localeCompare(b[0])
+      });
+      var typeKey = "";
+      for (let i = 0; i < arraySelect.length; i++) {
+        var select = arraySelect[i];
+        var typeId = select[0];
+        var typeChildrenId = select[1];
+        if (i != arraySelect.length - 1) {
+          typeKey += (typeId + "_" + typeChildrenId + "_");
+        } else {
+          typeKey += (typeId + "_" + typeChildrenId);
+        }
+      }
+      var tempNum = 0;
+      var gKey = tempTypeOrder.id + "_" + typeFlagTrue + "_" + typeKey;
+      for (let i = 0; i < tempOrderList.length; i++) {
+        var order = tempOrderList[i];
+        if (gKey == order.gKey) {
+          tempNum = order.num;
+        }
+      }
+
+      this.setData({
+        typeSetpperDisableFlag: true,
+        typeSetpperNum: tempNum
+      })
+    }
   },
 
   //规格单选框进步器
   onSetpperChangeOfTypeSelect(even) {
-    console.log("insert")
-    console.log(this.data.typeOrder)
-
+    //当前选中的map,这里肯定是完整的typeInfo
     var temTypeSelectMap = this.data.typeSelectMap;
-    
-    console.log(temTypeSelectMap)
-  },
+    var tempTypeOrder = this.data.typeOrder;
 
+    //商品数量
+    const goodsNum = even.detail;
+    //商品id
+    const goodsId = tempTypeOrder.id;
+    //当前选中商品的所有分类种类
+    const typeInfos = tempTypeOrder.typeInfo;
+
+    var tempOrderList = this.data.orderList;
+    var arraySelect = Array.from(temTypeSelectMap);
+    //根据大类排序
+    arraySelect.sort(function (a, b) {
+      return a[0].localeCompare(b[0])
+    });
+    var goodsTypeReletion = [];
+    var typeKey = "";
+    for (let i = 0; i < arraySelect.length; i++) {
+      var select = arraySelect[i];
+      var typeId = select[0];
+      var typeChildrenId = select[1];
+      var typeName = "";
+      var typeChildrenName = "";
+      for (let j = 0; j < typeInfos.length; j++) {
+        var typeInfo = typeInfos[j];
+        if (typeId == typeInfo.typeId) {
+          typeName = typeInfo.typeName;
+          var typeChildren = typeInfo.typeChildren;
+          for (let z = 0; z < typeChildren.length; z++) {
+            var children = typeChildren[z];
+            if (typeChildrenId == children.typeId) {
+              typeChildrenName = children.typeName;
+              break;
+            }
+          }
+          break;
+        }
+      }
+      var orderTypeInfo = new Object();
+      orderTypeInfo.typeId = typeId;
+      orderTypeInfo.typeName = typeName;
+      orderTypeInfo.typeChildrenId = typeChildrenId;
+      orderTypeInfo.typeChildrenName = typeChildrenName;
+      goodsTypeReletion.push(orderTypeInfo);
+
+      if (i != arraySelect.length - 1) {
+        typeKey += (typeId + "_" + typeChildrenId + "_");
+      } else {
+        typeKey += (typeId + "_" + typeChildrenId);
+      }
+    }
+    //
+    const gKey = goodsId + "_" + typeFlagTrue + "_" + typeKey;
+
+    if (goodsNum == 0) {
+      //当前商品个数为0
+      //删除当前商品
+      for (let i = 0; i < tempOrderList.length; i++) {
+        if (gKey == tempOrderList[i].gKey) {
+          tempOrderList.splice(i, 1);
+          break;
+        }
+      }
+    } else {
+      //判断当前订单有没有该商品,如果有先删除
+      for (let i = 0; i < tempOrderList.length; i++) {
+        if (gKey == tempOrderList[i].gKey) {
+          tempOrderList.splice(i, 1);
+          break;
+        }
+      }
+      var tempOrder = new Object();
+      //商品id
+      tempOrder.goodsId = goodsId;
+      //gKey
+      tempOrder.gKey = gKey;
+      //标识
+      tempOrder.typeFlag = true;
+      //商品规格关系
+      tempOrder.goodsTypeReletion = goodsTypeReletion;
+      //当前商品个数
+      tempOrder.num = goodsNum;
+      //添加商品
+      tempOrderList.push(tempOrder);
+    }
+    //计算商品件数
+    var tempOrderTotalNum = 0;
+    for (let i = 0; i < tempOrderList.length; i++) {
+      tempOrderTotalNum = tempOrderTotalNum + tempOrderList[i].num
+    }
+
+    this.setData({
+      orderList: tempOrderList,
+      orderTotalNum: tempOrderTotalNum * 100
+    })
+
+    console.log(this.data.orderList)
+  },
 
 })
