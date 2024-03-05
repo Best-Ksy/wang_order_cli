@@ -1,5 +1,10 @@
 const {
-  getBanner
+  tagInfo
+} = require("../../api/base.js")
+const {
+  getBanner,
+  getAllTagInfo,
+  getAllGoodsInfoByTagId
 } = require("../../api/index.js")
 
 //没有规格
@@ -8,44 +13,6 @@ const typeFlagFlase = "0"
 const typeFlagTrue = "1"
 
 const testData = {
-  //左侧导航bar测试数据
-  sidebarArrayTest: [{
-      id: 1,
-      title: "标签1"
-    },
-    {
-      id: 2,
-      title: "标签2"
-    },
-    {
-      id: 3,
-      title: "标签3"
-    },
-    {
-      id: 4,
-      title: "标签4"
-    },
-    {
-      id: 5,
-      title: "标签5"
-    },
-    {
-      id: 6,
-      title: "标签6"
-    },
-    {
-      id: 7,
-      title: "标签7"
-    },
-    {
-      id: 8,
-      title: "标签8"
-    },
-    {
-      id: 9,
-      title: "标签9"
-    },
-  ],
   goodsArrayTest: [{
       id: "10021",
       num: "0",
@@ -207,7 +174,9 @@ Page({
     //当前选择规格的商品
     typeOrder: {},
     //选择规格记录map
-    typeSelectMap: ""
+    typeSelectMap: "",
+    //选中的分类id
+    selectTagId:"",
 
 
   },
@@ -230,22 +199,82 @@ Page({
 
   //左侧导航bar数据初始化方法
   getSideBarArray() {
-    this.setData({
-      sidebarArray: testData.sidebarArrayTest
+
+    getAllTagInfo().then(res => {
+      console.log(res.data);
+      var returnData = res.data;
+      if (200 == returnData.code) {
+        var tagInfos = returnData.data;
+        var tempSideBarArray = [];
+        if (tagInfos.length > 0) {
+          for (let i = 0; i < tagInfos.length; i++) {
+            var sidebar = new Object();
+            sidebar.id = tagInfos[i].id;
+            sidebar.title = tagInfos[i].tagName;
+            tempSideBarArray.push(sidebar);
+          }
+          
+          this.setData({
+            sidebarArray: tempSideBarArray,
+            selectTagId: tempSideBarArray[0].id
+          })
+        }
+        
+      }
     })
   },
   //右侧商品烂数据
   getGoodsArray() {
+    //先清空商品栏
     this.setData({
-      goodsArray: testData.goodsArrayTest
+      goodsArray: []
     })
+    var tempTagId = this.data.selectTagId;
+    getAllGoodsInfoByTagId({"tagId": tempTagId}).then(res => {
+      console.log(res.data);
+      var returnData = res.data;
+      if (200 == returnData.code) {
+        var goodsInfo = returnData.data;
+        var tempGoodsInfoArray = [];
+        if (goodsInfo.length > 0) {
+          for (let i = 0; i < goodsInfo.length; i++) {
+            var good = new Object();
+            var goodInfo = goodsInfo[i];
+            good.id = goodInfo.id;
+            good.num = "0";
+            good.desc = goodInfo.goodDesc;
+            good.title = goodInfo.title;
+            good.thumb = goodInfo.thumb;
+            if (typeFlagFlase == goodInfo.typeFlag) {
+              good.typeFlag = false;
+            } else {
+              good.typeFlag = true;
+              good.typeInfo = goodInfo.typeInfo;
+            }
+            tempGoodsInfoArray.push(good)
+          }
+          
+          this.setData({
+            goodsArray: tempGoodsInfoArray
+          })
+        }
+        
+      }
+    })
+    
   },
 
   //sideBar切换触发
   onsideBarChange(event) {
     //切换到数组第几个 0开始
-    console.log(event.detail)
-
+    console.log(this.data.sidebarArray[event.detail])
+    var tempSideBarArray = this.data.sidebarArray;
+    var tempTagId = tempSideBarArray[event.detail].id
+    this.setData({
+      selectTagId: tempTagId
+    })
+    //右侧商品烂数据
+    this.getGoodsArray()
   },
 
   //进步器触发（无规格情况）
