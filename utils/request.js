@@ -11,9 +11,9 @@ function request(url, method, data){
       url: url,
       method: method,
       data: data,
-      header: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
+      // header: {
+      //   'Content-Type': 'application/x-www-form-urlencoded'
+      // },
       success(res){
         resolve(res)
       },

@@ -1,11 +1,11 @@
+import Dialog from '@vant/weapp/dialog/dialog'
+
 const {
-  tagInfo
-} = require("../../api/base.js")
-const {
-  getBanner,
   getAllTagInfo,
-  getAllGoodsInfoByTagId
+  getAllGoodsInfoByTagId,
+  commitOrder
 } = require("../../api/index.js")
+
 
 //没有规格
 const typeFlagFlase = "0"
@@ -176,7 +176,11 @@ Page({
     //选择规格记录map
     typeSelectMap: "",
     //选中的分类id
-    selectTagId:"",
+    selectTagId: "",
+    //订单展示
+    orderShow: false,
+    //订单展示列表
+    goodsShowArray: []
 
 
   },
@@ -213,13 +217,13 @@ Page({
             sidebar.title = tagInfos[i].tagName;
             tempSideBarArray.push(sidebar);
           }
-          
+
           this.setData({
             sidebarArray: tempSideBarArray,
             selectTagId: tempSideBarArray[0].id
           })
         }
-        
+
       }
     })
   },
@@ -230,7 +234,9 @@ Page({
       goodsArray: []
     })
     var tempTagId = this.data.selectTagId;
-    getAllGoodsInfoByTagId({"tagId": tempTagId}).then(res => {
+    getAllGoodsInfoByTagId({
+      "tagId": tempTagId
+    }).then(res => {
       console.log(res.data);
       var returnData = res.data;
       if (200 == returnData.code) {
@@ -247,21 +253,29 @@ Page({
             good.thumb = goodInfo.thumb;
             if (typeFlagFlase == goodInfo.typeFlag) {
               good.typeFlag = false;
+              var tempOrderList = this.data.orderList;
+              for (let j = 0; j < tempOrderList.length; j++) {
+                console.log(tempOrderList[j])
+                if (tempOrderList[j].goodsId == good.id) {
+                  good.num = tempOrderList[j].num;
+                  break;
+                }
+              }
             } else {
               good.typeFlag = true;
               good.typeInfo = goodInfo.typeInfo;
             }
             tempGoodsInfoArray.push(good)
           }
-          
+
           this.setData({
             goodsArray: tempGoodsInfoArray
           })
         }
-        
+
       }
     })
-    
+
   },
 
   //sideBar切换触发
@@ -281,8 +295,13 @@ Page({
   onSetpperChange(even) {
 
     const goodsNum = even.detail;
-    const goodsId = even.currentTarget.dataset.id;
+    const item = even.currentTarget.dataset.item;
+    console.log(item);
+    const goodsId = item.id;
     const gKey = goodsId + "_" + typeFlagFlase;
+    const title = item.title;
+    const desc = item.desc;
+    const thumb = item.thumb;
     var tempOrderList = this.data.orderList;
     if (goodsNum == 0) {
       //当前商品个数为0
@@ -311,6 +330,12 @@ Page({
       tempOrder.typeFlag = false;
       //当前商品个数
       tempOrder.num = goodsNum;
+      //商品图片
+      tempOrder.thumb = thumb;
+      //title
+      tempOrder.title = title;
+      //desc
+      tempOrder.desc = desc;
       //添加商品
       tempOrderList.push(tempOrder)
     }
@@ -464,11 +489,13 @@ Page({
     //当前选中的map,这里肯定是完整的typeInfo
     var temTypeSelectMap = this.data.typeSelectMap;
     var tempTypeOrder = this.data.typeOrder;
-
     //商品数量
     const goodsNum = even.detail;
     //商品id
     const goodsId = tempTypeOrder.id;
+    const title = tempTypeOrder.title;
+    const desc = tempTypeOrder.desc;
+    const thumb = tempTypeOrder.thumb;
     //当前选中商品的所有分类种类
     const typeInfos = tempTypeOrder.typeInfo;
 
@@ -545,6 +572,12 @@ Page({
       tempOrder.goodsTypeReletion = goodsTypeReletion;
       //当前商品个数
       tempOrder.num = goodsNum;
+      //商品图片
+      tempOrder.thumb = thumb;
+      //title
+      tempOrder.title = title;
+      //desc
+      tempOrder.desc = desc;
       //添加商品
       tempOrderList.push(tempOrder);
     }
@@ -561,5 +594,103 @@ Page({
 
     console.log(this.data.orderList)
   },
+  //订单窗口展示
+  orderShowOpen() {
 
+    this.initShowOrderList();
+    this.setData({
+      orderShow: true
+    });
+
+    console.log(this.data.goodsShowArray)
+
+  },
+
+  //订单窗口关闭
+  orderShowClose() {
+    this.setData({
+      orderShow: false
+    });
+  },
+  deleteOrderDialog(event) {
+
+    var gkey = event.currentTarget.dataset.gkey;
+    var tempOrderInfo = this.data.orderList;
+    const {
+      position,
+      instance
+    } = event.detail;
+    switch (position) {
+      case 'cell':
+        instance.close();
+        break;
+      case 'right':
+        Dialog.confirm({
+          message: '确定删除吗？',
+        }).then(() => {
+          for (let i = 0; i < tempOrderInfo.length; i++) {
+            if (tempOrderInfo[i].gKey == gkey) {
+              tempOrderInfo.splice(i, 1);
+              break;
+            }
+          }
+          this.initShowOrderList();
+
+          //计算商品件数
+          var tempOrderTotalNum = 0;
+          for (let i = 0; i < tempOrderInfo.length; i++) {
+            tempOrderTotalNum = tempOrderTotalNum + tempOrderInfo[i].num
+          }
+
+          this.setData({
+            orderList: tempOrderInfo,
+            orderTotalNum: tempOrderTotalNum * 100
+          })
+
+          this.getGoodsArray();
+          instance.close();
+          if (tempOrderInfo.length == 0) {
+            this.orderShowClose();
+          }
+        });
+        break;
+    }
+  },
+  initShowOrderList() {
+    var tempOrderInfo = this.data.orderList;
+    console.log(tempOrderInfo)
+    var tempGoodsShowArray = [];
+    for (let i = 0; i < tempOrderInfo.length; i++) {
+      var order = tempOrderInfo[i];
+      var showOrder = new Object();
+      showOrder.title = order.title;
+      showOrder.gKey = order.gKey;
+      showOrder.goodsId = order.goodsId;
+      showOrder.num = order.num;
+      showOrder.thumb = order.thumb;
+      showOrder.desc = order.desc;
+      showOrder.typeFlag = order.typeFlag;
+      if (order.typeFlag) {
+        var tempReletion = order.goodsTypeReletion;
+        var typeInfoList = [];
+        for (let j = 0; j < tempReletion.length; j++) {
+          typeInfoList.push(tempReletion[j].typeChildrenName);
+        }
+        showOrder.typeInfoList = typeInfoList;
+      }
+      tempGoodsShowArray.push(showOrder);
+    }
+
+    this.setData({
+      goodsShowArray: tempGoodsShowArray
+    });
+  },
+
+  onClickButton(even) {
+    var tempOrderInfo = this.data.orderList;
+    commitOrder(tempOrderInfo).then(res => {
+      console.log(res.data)
+    })
+    console.log(tempOrderInfo)
+  }
 })

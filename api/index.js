@@ -3,15 +3,8 @@
  */
 
  const { request } = require("../utils/request.js")
- const { baseUrl, banner, tagInfo, goodsInfo} = require("./base.js")
+ const { baseUrl, tagInfo, goodsInfo, order} = require("./base.js")
   
- /**
-  * get banner data
-  */
-
-function getBanner(data){
-  return request( baseUrl + banner, "GET", null)    
-}
 
 /**
  * 获取所有的分类标签
@@ -30,9 +23,13 @@ function getAllGoodsInfoByTagId(data) {
   
 }
 
+function commitOrder(data) {
+  return request(baseUrl + order.commitOrder, "POST", data)
+}
+
 
 module.exports = {
-  getBanner,  
   getAllTagInfo,
-  getAllGoodsInfoByTagId
+  getAllGoodsInfoByTagId,
+  commitOrder
 }

@@ -21,7 +21,7 @@
       <view wx:for="{{ goodsArray }}" wx:key="id">
         <van-card tag="{{ item.tag }}" desc="{{ item.desc }}" title="{{ item.title }}" thumb="{{ item.thumb }}">
           <view slot="footer" wx:if="{{ !item.typeFlag }}">
-            <van-stepper value="{{ 0 }}" min="0" bind:change="onSetpperChange" data-id="{{item.id}}" />
+            <van-stepper value="{{ item.num }}" min="0" bind:change="onSetpperChange" data-item="{{item}}" />
           </view>
           <view slot="footer" wx:if="{{ item.typeFlag }}">
             <van-button type="primary" size="mini" type="warning" round bind:click="popupShowClose" data-item="{{item}}">选规格</van-button>
@@ -38,7 +38,7 @@
       <van-image width="2rem" height="2rem" fit="contain" src="../../../../images/shoppingbag.png" />
     </van-submit-bar>
     <van-submit-bar wx:if="{{orderTotalNum!=0}}" label="商品种类数:" currency="" decimal-length="0" price="{{ orderTotalNum }}" button-text="提交订单" bind:submit="onClickButton" tip="{{ true }}">
-      <van-image width="2rem" height="2rem" fit="contain" src="../../../../images/shoppingbag_select.png" />
+      <van-image bind:click="orderShowOpen" width="2rem" height="2rem" fit="contain" src="../../../../images/shoppingbag_select.png" />
     </van-submit-bar>
   </view>
 
@@ -63,12 +63,33 @@
         </view>
       </view>
       <view wx:if="{{ !typeSetpperDisableFlag }}">
-        <van-stepper value="{{ typeSetpperNum }}" disabled min="0" bind:change="onSetpperChangeOfTypeSelect"/>
+        <van-stepper value="{{ typeSetpperNum }}" disabled min="0" bind:change="onSetpperChangeOfTypeSelect" />
       </view>
       <view wx:if="{{ typeSetpperDisableFlag }}">
-        <van-stepper value="{{ typeSetpperNum }}" min="0" bind:change="onSetpperChangeOfTypeSelect"/>
+        <van-stepper value="{{ typeSetpperNum }}" min="0" bind:change="onSetpperChangeOfTypeSelect" />
       </view>
-      
+
     </view>
   </van-popup>
+
+  <!-- 底部商品总览弹出层 -->
+  <van-popup show="{{ orderShow }}" bind:close="orderShowClose" position="bottom" custom-style="height: 50%;" round>
+    <view wx:for="{{ goodsShowArray }}" wx:key="id">
+      <van-swipe-cell id="swipe-cell" right-width="{{ 65 }}" async-close bind:close="deleteOrderDialog" data-gKey="{{ item.gKey }}">
+        <van-cell-group>
+          <van-card tag="{{ item.tag }}" desc="{{ item.desc }}" title="{{ item.title }}" thumb="{{ item.thumb }}" num="{{ item.num }}">
+            <view slot="tags" wx:if="{{ item.typeFlag }}">
+              <van-tag wx:for="{{ item.typeInfoList }}" wx:key="id" plain type="danger" >{{item}}</van-tag>
+            </view>
+          </van-card>
+        </van-cell-group>
+        <view slot="right" class="van-swipe-cell__right">
+          <van-image width="3rem" height="3rem" src="../../../../images/delete.png" />
+        </view>
+      </van-swipe-cell>
+    </view>
+  </van-popup>
+
+  <!-- dialog 弹出提示 -->
+  <van-dialog id="van-dialog" />
 </view>
