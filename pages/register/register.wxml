@@ -1,0 +1,27 @@
+<!--index.wxml-->
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="container">
+    <view class="userinfo">
+      <!-- <block wx:if="{{canIUseNicknameComp && !hasUserInfo}}"> -->
+      <block>
+        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+          <image class="avatar" src="{{userInfo.avatarUrl}}"></image>
+        </button>
+        <view class="nickname-wrapper">
+          <text class="nickname-label">昵称</text>
+          <input type="nickname" class="nickname-input" placeholder="请输入昵称" bind:change="onInputChange" />
+        </view>
+        <view class="phone-wrapper">
+          <van-field value="{{ phone }}" label="手机号" placeholder="请输入手机号" error-message="{{ phoneErro }}" border="{{ false }}" bind:change="onPhoneChange" />
+        </view>
+      </block>
+      <view wx:if="{{canIUseNicknameComp && !hasUserInfo}}">
+        <van-button type="primary" block disabled>提交</van-button>
+      </view>
+      <view wx:else>
+        <van-button type="primary" block bind:click="commitUserInfo">提交</van-button>
+      </view>
+    </view>
+
+  </view>
+</scroll-view>

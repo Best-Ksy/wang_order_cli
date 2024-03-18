@@ -1,1 +1,9 @@
-<!--pages/user/user.wxml-->
+<view wx:if="{{loginFlag}}">
+  <view class="user_info">
+    <view>
+      <van-image round width="4rem" height="4rem" src="http://tmp/dI9B0X9AGFBb36cc80fddf008ad3a1bbb59508ed4ca2.jpeg"/>
+    </view>
+    <view class="user_name">{{ userInfo.nkName }}</view>
+  </view>
+
+</view>

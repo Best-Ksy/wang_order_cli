@@ -1,1 +1,18 @@
-/* pages/user/user.wxss */
+.user_info{
+  float: left;
+  position: fixed;
+  height: 10%;
+  width: 80%;
+  display: flex;
+  margin-top: 10%;
+  margin-left: 10%;
+  text-align: center;
+}
+.user_name{
+  display: flex;
+  /* font-size: 36rpx; */
+  color: #333;
+  line-height: 50%;
+  margin-top: 10%;
+  margin-left: 4%;
+}
